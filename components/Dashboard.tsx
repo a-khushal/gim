@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, CreditCard, Loader } from 'lucide-react'
+import { Users, CreditCard, Loader, Trash } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,12 +12,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"  
 import Image from 'next/image'
 import AppBar from './Appbar'
 import FetchAllUsers from '@/actions/FetchAllUsers'
 import { MembershipStatus, PLAN } from '@prisma/client'
 import { Input } from './ui/input'
 import { AddNewUser } from './AddNewUser'
+import DeleteUser from '@/actions/DeleteUser'
+import { Toast, ToasterToast, useToast } from '@/hooks/use-toast'
 
 
 interface User {
@@ -29,11 +42,40 @@ interface User {
     status: MembershipStatus;
 }
 
+interface ToastType {
+    id: string
+    dismiss: () => void
+    update: (props: ToasterToast) => void
+}
+
+type ToastFunction = (props: Toast) => ToastType
+
+async function handleDelete(id: number, toast: ToastFunction) {
+    const val = await DeleteUser(id);
+    if(val.message) {
+        toast({
+            title: "Success",
+            description: "User deleted successfully.",
+            variant: "default",
+        })
+        setTimeout(() => {
+            window.location.reload()
+        }, 1000)
+    } else {
+        toast({
+            title: "Failed",
+            description: `${val.error}`,
+            variant: "destructive",
+        })
+    }
+}
+
 export default function Dashboard() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [users, setUsers] = useState<User[] | { error: string }>()
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const { toast } = useToast()
 
   useEffect(() => {
     async function main() {
@@ -129,7 +171,7 @@ export default function Dashboard() {
                                 <td className="px-4 py-4">{user.membershipPlan}</td>
                                 <td className="px-4 py-4">{new Date(user.membershipEnd).toLocaleDateString()}</td>
                                 <td className="px-4 py-4">{user.status}</td>
-                                <td className="px-4 py-4">
+                                <td className="px-4 py-4 flex space-x-4 items-center">
                                     <Dialog>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="sm" onClick={() => setSelectedUser(user)}>
@@ -185,6 +227,24 @@ export default function Dashboard() {
                                         )}
                                     </DialogContent>
                                     </Dialog>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="outline"><Trash/></Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete this
+                                                user and remove your data from our servers.
+                                            </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(user.id, toast)}>Continue</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </td>
                                 </tr>
                             ))
