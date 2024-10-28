@@ -17,6 +17,7 @@ import AppBar from './Appbar'
 import FetchAllUsers from '@/actions/FetchAllUsers'
 import { MembershipStatus, PLAN } from '@prisma/client'
 import { Input } from './ui/input'
+import { AddNewUser } from './AddNewUser'
 
 
 interface User {
@@ -92,7 +93,13 @@ export default function Dashboard() {
 
                 <Card className="mt-6 dark:bg-zinc-900 dark:border-zinc-800">
                     <CardHeader>
-                        <CardTitle className="dark:text-white flex justify-between items-center">All Users <Input type="text" placeholder="search"  className="w-2/3 lg:w-1/3 ml-auto" onChange={(e) => setSearch(e.target.value)}/></CardTitle>
+                        <CardTitle className="dark:text-white flex justify-between items-center">
+                            <div className='flex justify-center items-center space-x-8'>
+                                <span>All users</span>
+                                <AddNewUser/>
+                            </div>
+                            <Input type="text" placeholder="search"  className="w-1/3 md:w-2/3 ml-auto" onChange={(e) => setSearch(e.target.value)}/>
+                        </CardTitle>
                     </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto">
